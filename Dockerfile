@@ -9,9 +9,10 @@ COPY go.sum ./
 
 RUN go mod download
 
-COPY *.go ./
+COPY cmd/* ./
+COPY pkg/* ./
 
-RUN go build -o /hello-app
+RUN go build -o /cmd/server
 
-CMD [ "/hello-app" ]
+CMD [ "/server" ]
 
