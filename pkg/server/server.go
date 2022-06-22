@@ -1,15 +1,22 @@
-package main
+package server
 
 import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
 
+// SafeCounter is safe to use concurrently.
+type SafeBreak struct {
+	mu        sync.Mutex
+	breakBool bool
+}
+
 // getEnv reads and returns environment variables
-func getEnv(envVar, fallback string) string {
+func GetEnv(envVar, fallback string) string {
 	if value, present := os.LookupEnv(envVar); present {
 		return value
 	}
@@ -17,8 +24,8 @@ func getEnv(envVar, fallback string) string {
 
 }
 
-// helloAppRouter sets router
-func helloAppRouter() *gin.Engine {
+// HelloAppRouter sets router
+func HelloAppRouter(m *sync.Mutex) *gin.Engine {
 
 	var breakBool bool //defaults to false
 	router := gin.Default()
@@ -41,16 +48,12 @@ func helloAppRouter() *gin.Engine {
 	})
 
 	router.POST("/break", func(c *gin.Context) {
+		m.Lock()
 		breakBool = true
+		m.Unlock()
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Break request was successful!"})
 	})
 
 	return router
-}
-
-func main() {
-	webAppPort := getEnv("WEBAPP_PORT", "8080")
-	r := helloAppRouter()
-	r.Run(":" + webAppPort)
 }

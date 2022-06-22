@@ -1,18 +1,21 @@
-package main
+package server
 
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+var m sync.Mutex
+
 func TestHelloRouteDefault(t *testing.T) {
 
 	expected_message := `{"message":"Hello World!"}`
 
-	router := helloAppRouter()
+	router := HelloAppRouter(&m)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/hello", nil)
 	router.ServeHTTP(w, req)
@@ -25,7 +28,7 @@ func TestHelloRouteWithName(t *testing.T) {
 
 	expected_message := `{"message":"Hello Hristo!"}`
 
-	router := helloAppRouter()
+	router := HelloAppRouter(&m)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/hello?name=Hristo", nil)
 	router.ServeHTTP(w, req)
@@ -38,7 +41,7 @@ func TestBreakRoute(t *testing.T) {
 
 	expected_message := `{"message":"Break request was successful!"}`
 
-	router := helloAppRouter()
+	router := HelloAppRouter(&m)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/break", nil)
 	router.ServeHTTP(w, req)
@@ -51,7 +54,7 @@ func TestHealthzRouteOk(t *testing.T) {
 
 	expected_message := `{"message":"HTTP status 200"}`
 
-	router := helloAppRouter()
+	router := HelloAppRouter(&m)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/healthz", nil)
 	router.ServeHTTP(w, req)
@@ -64,7 +67,7 @@ func TestHealthzRouteError(t *testing.T) {
 
 	expected_message := `{"message":"HTTP status 500"}`
 
-	router := helloAppRouter()
+	router := HelloAppRouter(&m)
 	w := httptest.NewRecorder()
 	req_break, _ := http.NewRequest("POST", "/break", nil)
 	router.ServeHTTP(w, req_break)
